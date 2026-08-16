@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vídeo com Pontuação</title>
+
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0 0 30px 0;
+      background-color: #333;
+    }
+
+    #input-container {
+      margin: 20px;
+    }
+
+    input[type="text"] {
+      width: 400px;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #video-container {
+      width: 800px;
+      height: 450px;
+      border: 10px solid black;
+      margin: 20px auto;
+      position: relative;
+      box-sizing: border-box;
+      background: #222;
+    }
+
+    #youtube-video {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    #counters {
+      width: 800px;
+      height: 32px;
+      margin: 10px auto 0 auto;
+      position: relative;
+      color: white;
+      font-weight: bold;
+      line-height: 32px;
+    }
+
+    #score-main {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      white-space: nowrap;
+    }
+
+    #total-counter {
+      position: absolute;
+      left: calc(50% + 115px);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 27px;
+      line-height: 1;
+      color: white;
+      white-space: nowrap;
+    }
+
+    #score-change {
+      position: absolute;
+      left: calc(50% + 245px);
+      top: 50%;
+      transform: translateY(-50%);
+      min-width: 45px;
+      font-size: 18px;
+      line-height: 1;
+      visibility: hidden;
+    }
+
+    #score-change.show {
+      visibility: visible;
+    }
+
+    #reset-container {
+      margin-top: 26px;
+    }
+
+    #key-config {
+      width: 800px;
+      margin: 14px auto 0 auto;
+      color: #ddd;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #key-config-title {
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 7px;
+    }
+
+    .config-row {
+      display: inline-block;
+      margin: 4px 7px;
+      white-space: nowrap;
+    }
+
+    .key-input {
+      width: 28px;
+      padding: 4px;
+      text-align: center;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    #config-warning {
+      color: #ffb3b3;
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+
+    #how-to {
+      width: 800px;
+      margin: 12px auto 0 auto;
+      color: #ddd;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    #how-to-title {
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    #how-to ol {
+      display: inline-block;
+      text-align: left;
+      margin: 4px auto 0 auto;
+      padding-left: 22px;
+    }
+
+    #how-to li {
+      margin-bottom: 4px;
+    }
+
+    #status {
+      color: #fff;
+      font-size: 14px;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="input-container">
+    <input type="text" id="youtube-link" placeholder="Cole o link do YouTube aqui">
+    <button id="load-video">Carregar Vídeo</button>
+    <div id="status"></div>
+  </div>
+
+  <div id="video-container">
+    <iframe id="youtube-video"
+            src="about:blank"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+    </iframe>
+  </div>
+
+  <div id="counters">
+    <span id="score-main">
+      <span id="positive-counter">+0</span>
+      <span id="negative-counter">-0</span>
+    </span>
+    <span id="total-counter">Total: 0</span>
+    <span id="score-change"></span>
+  </div>
+
+  <div id="reset-container">
+    <button id="reset-score">Zerar Pontuação</button>
+
+    <div id="key-config">
+      <div id="key-config-title">Configurar teclas</div>
+
+      <span class="config-row">
+        <label for="key-plus-1">+1:</label>
+        <input class="key-input" id="key-plus-1" type="text" maxlength="1" value="p" data-action="plus1">
+      </span>
+
+      <span class="config-row">
+        <label for="key-minus-1">-1:</label>
+        <input class="key-input" id="key-minus-1" type="text" maxlength="1" value="a" data-action="minus1">
+      </span>
+
+      <span class="config-row">
+        <label for="key-plus-2">+2:</label>
+        <input class="key-input" id="key-plus-2" type="text" maxlength="1" value="l" data-action="plus2">
+      </span>
+
+      <span class="config-row">
+        <label for="key-plus-3">+3:</label>
+        <input class="key-input" id="key-plus-3" type="text" maxlength="1" value="o" data-action="plus3">
+      </span>
+
+      <span class="config-row">
+        <label for="key-plus-4">+4:</label>
+        <input class="key-input" id="key-plus-4" type="text" maxlength="1" value="k" data-action="plus4">
+      </span>
+
+      <span class="config-row">
+        <label for="key-plus-0">+0:</label>
+        <input class="key-input" id="key-plus-0" type="text" maxlength="1" value="c" data-action="plus0">
+      </span>
+
+      <div id="config-warning"></div>
+    </div>
+
+    <div id="how-to">
+      <div id="how-to-title">Como usar localmente (desconsiderar se usado no browser)</div>
+      <ol>
+        <li>Deixe este arquivo HTML dentro de uma pasta fácil de achar, por exemplo, na Área de Trabalho.</li>
+        <li>Abra essa pasta, clique na barra de endereço do Explorador de Arquivos, digite <strong>cmd</strong> e aperte <strong>Enter</strong>. Isso abre o Prompt de Comando já nessa pasta.</li>
+        <li>No Prompt de Comando, digite <strong>py -m http.server 8000</strong> e aperte <strong>Enter</strong>. Deixe essa janela aberta enquanto estiver usando a página.</li>
+        <li>No navegador, acesse <strong>localhost:8000</strong>, clique em <strong>index.html</strong>, cole o link do YouTube e use as teclas configuradas. Para trocar uma tecla, altere a letra em <strong>Configurar teclas</strong>; cada campo aceita apenas uma letra e não pode repetir outra tecla.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const loadButton = document.getElementById('load-video');
+    const youtubeLinkInput = document.getElementById('youtube-link');
+    const youtubeIframe = document.getElementById('youtube-video');
+    const positiveDisplay = document.getElementById('positive-counter');
+    const negativeDisplay = document.getElementById('negative-counter');
+    const totalDisplay = document.getElementById('total-counter');
+    const resetButton = document.getElementById('reset-score');
+    const statusBox = document.getElementById('status');
+    const scoreChangeDisplay = document.getElementById('score-change');
+    const keyInputs = document.querySelectorAll('.key-input');
+    const configWarning = document.getElementById('config-warning');
+
+    let positiveScore = 0;
+    let negativeScore = 0;
+    let scoreChangeTimeout = null;
+
+    const originalBg = getComputedStyle(document.body).backgroundColor;
+
+    const actionSettings = {
+      plus1: {
+        value: 1,
+        color: '#249c44',
+        duration: 250
+      },
+      minus1: {
+        value: -1,
+        color: '#bf2011',
+        duration: 250
+      },
+      plus2: {
+        value: 2,
+        color: '#0d66db',
+        duration: 300
+      },
+      plus3: {
+        value: 3,
+        color: '#e0a714',
+        duration: 350
+      },
+      plus4: {
+        value: 4,
+        color: '#ff7a00',
+        duration: 400
+      },
+      plus0: {
+        value: 0,
+        color: '#A19C9C',
+        duration: 250
+      }
+    };
+
+    function extractVideoID(url) {
+      try {
+        const parsed = new URL(url);
+
+        if (parsed.hostname.includes('youtu.be')) {
+          return parsed.pathname.split('/').filter(Boolean)[0] || '';
+        }
+
+        if (parsed.hostname.includes('youtube.com')) {
+          if (parsed.pathname === '/watch') {
+            return parsed.searchParams.get('v') || '';
+          }
+
+          if (parsed.pathname.startsWith('/embed/') || parsed.pathname.startsWith('/shorts/')) {
+            return parsed.pathname.split('/').filter(Boolean)[1] || '';
+          }
+        }
+      } catch (e) {
+        if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+          return url;
+        }
+      }
+
+      return '';
+    }
+
+    function buildEmbedUrl(videoId) {
+      const params = new URLSearchParams({
+        rel: '0',
+        playsinline: '1'
+      });
+
+      if (location.protocol === 'http:' || location.protocol === 'https:') {
+        params.set('origin', location.origin);
+      }
+
+      return 'https://www.youtube.com/embed/' + encodeURIComponent(videoId) + '?' + params.toString();
+    }
+
+    loadButton.addEventListener('click', function() {
+      const url = youtubeLinkInput.value.trim();
+      const videoId = extractVideoID(url);
+
+      if (!videoId) {
+        alert('Link do YouTube inválido ou vídeo indisponível.');
+        return;
+      }
+
+      if (location.protocol === 'file:') {
+        statusBox.textContent = 'Atenção: abra este arquivo por http://localhost, não por file://. No file:// o YouTube pode retornar Erro 153.';
+      } else {
+        statusBox.textContent = '';
+      }
+
+      youtubeIframe.src = buildEmbedUrl(videoId);
+    });
+
+    function flashScreen(color, duration) {
+      document.body.style.backgroundColor = color;
+
+      setTimeout(function() {
+        document.body.style.backgroundColor = originalBg;
+      }, duration);
+    }
+
+    function showScoreChange(value, duration) {
+      clearTimeout(scoreChangeTimeout);
+
+      const text = value > 0 ? '+' + value : String(value);
+      scoreChangeDisplay.textContent = text;
+      scoreChangeDisplay.classList.add('show');
+
+      scoreChangeTimeout = setTimeout(function() {
+        scoreChangeDisplay.classList.remove('show');
+      }, duration);
+    }
+
+    function updateScoreDisplays() {
+      positiveDisplay.textContent = '+' + positiveScore;
+      negativeDisplay.textContent = '-' + negativeScore;
+      totalDisplay.textContent = 'Total: ' + (positiveScore - negativeScore);
+    }
+
+    function sanitizeKeyInput(input) {
+      const cleanValue = input.value
+        .toLowerCase()
+        .replace(/[^a-z]/g, '')
+        .slice(0, 1);
+
+      input.value = cleanValue;
+    }
+
+    function getCurrentKeyConfig() {
+      const config = {};
+
+      keyInputs.forEach(function(input) {
+        config[input.dataset.action] = input.value.toLowerCase();
+      });
+
+      return config;
+    }
+
+    function validateKeyConfig() {
+      const usedKeys = {};
+      let hasError = false;
+      let warning = '';
+
+      keyInputs.forEach(function(input) {
+        input.style.outline = '';
+        const key = input.value.toLowerCase();
+
+        if (!key) {
+          hasError = true;
+          input.style.outline = '2px solid #ffb3b3';
+          warning = 'Preencha todas as teclas com uma letra.';
+          return;
+        }
+
+        if (usedKeys[key]) {
+          hasError = true;
+          input.style.outline = '2px solid #ffb3b3';
+          usedKeys[key].style.outline = '2px solid #ffb3b3';
+          warning = 'Não use a mesma letra em mais de uma ação.';
+          return;
+        }
+
+        usedKeys[key] = input;
+      });
+
+      configWarning.textContent = warning;
+      return !hasError;
+    }
+
+    function refreshKeyConfig() {
+      keyInputs.forEach(sanitizeKeyInput);
+      validateKeyConfig();
+    }
+
+    keyInputs.forEach(function(input) {
+      input.addEventListener('input', refreshKeyConfig);
+
+      input.addEventListener('focus', function() {
+        input.select();
+      });
+    });
+
+    document.addEventListener('keydown', function(event) {
+      const activeTag = document.activeElement.tagName.toLowerCase();
+
+      if (activeTag === 'input' || activeTag === 'textarea') {
+        return;
+      }
+
+      if (!validateKeyConfig()) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      const config = getCurrentKeyConfig();
+
+      for (const action in config) {
+        if (config[action] === key) {
+          const setting = actionSettings[action];
+          const value = setting.value;
+
+          if (value > 0) {
+            positiveScore += value;
+          } else if (value < 0) {
+            negativeScore += Math.abs(value);
+          }
+
+          flashScreen(setting.color, setting.duration);
+          updateScoreDisplays();
+          showScoreChange(value, setting.duration);
+          return;
+        }
+      }
+    });
+
+    resetButton.addEventListener('click', function() {
+      positiveScore = 0;
+      negativeScore = 0;
+      updateScoreDisplays();
+      scoreChangeDisplay.textContent = '';
+      scoreChangeDisplay.classList.remove('show');
+    });
+
+    refreshKeyConfig();
+    updateScoreDisplays();
+  </script>
+</body>
+</html>
