@@ -109,6 +109,12 @@
       margin-bottom: 7px;
     }
 
+    #key-config-help {
+      color: #cfcfcf;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
     .config-row {
       display: inline-block;
       margin: 4px 7px;
@@ -116,11 +122,11 @@
     }
 
     .key-input {
-      width: 28px;
+      width: 72px;
       padding: 4px;
       text-align: center;
       font-size: 14px;
-      text-transform: uppercase;
+      cursor: pointer;
     }
 
     #config-warning {
@@ -130,29 +136,11 @@
       min-height: 16px;
     }
 
-    #how-to {
+    #credit {
       width: 800px;
-      margin: 12px auto 0 auto;
-      color: #ddd;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    #how-to-title {
-      font-weight: bold;
-      color: #fff;
-      margin-bottom: 5px;
-    }
-
-    #how-to ol {
-      display: inline-block;
-      text-align: left;
-      margin: 4px auto 0 auto;
-      padding-left: 22px;
-    }
-
-    #how-to li {
-      margin-bottom: 4px;
+      margin: 24px auto 0 auto;
+      color: #aaa;
+      font-size: 11px;
     }
 
     #status {
@@ -166,8 +154,8 @@
 
 <body>
   <div id="input-container">
-    <input type="text" id="youtube-link" placeholder="Cole o link do YouTube aqui">
-    <button id="load-video">Carregar Vídeo</button>
+    <input type="text" id="youtube-link" placeholder="YouTube link">
+    <button id="load-video">Load Video</button>
     <div id="status"></div>
   </div>
 
@@ -190,54 +178,47 @@
   </div>
 
   <div id="reset-container">
-    <button id="reset-score">Zerar Pontuação</button>
+    <button id="reset-score">Reset</button>
 
     <div id="key-config">
-      <div id="key-config-title">Configurar teclas</div>
+      <div id="key-config-title">Configure keys</div>
+      <div id="key-config-help">Click a field and press the key you want to use. Letters, numbers, symbols and special keys are accepted.</div>
 
       <span class="config-row">
         <label for="key-plus-1">+1:</label>
-        <input class="key-input" id="key-plus-1" type="text" maxlength="1" value="p" data-action="plus1">
+        <input class="key-input" id="key-plus-1" type="text" value="P" data-key="p" data-action="plus1" readonly>
       </span>
 
       <span class="config-row">
         <label for="key-minus-1">-1:</label>
-        <input class="key-input" id="key-minus-1" type="text" maxlength="1" value="a" data-action="minus1">
+        <input class="key-input" id="key-minus-1" type="text" value="A" data-key="a" data-action="minus1" readonly>
       </span>
 
       <span class="config-row">
         <label for="key-plus-2">+2:</label>
-        <input class="key-input" id="key-plus-2" type="text" maxlength="1" value="l" data-action="plus2">
+        <input class="key-input" id="key-plus-2" type="text" value="L" data-key="l" data-action="plus2" readonly>
       </span>
 
       <span class="config-row">
         <label for="key-plus-3">+3:</label>
-        <input class="key-input" id="key-plus-3" type="text" maxlength="1" value="o" data-action="plus3">
+        <input class="key-input" id="key-plus-3" type="text" value="O" data-key="o" data-action="plus3" readonly>
       </span>
 
       <span class="config-row">
         <label for="key-plus-4">+4:</label>
-        <input class="key-input" id="key-plus-4" type="text" maxlength="1" value="k" data-action="plus4">
+        <input class="key-input" id="key-plus-4" type="text" value="K" data-key="k" data-action="plus4" readonly>
       </span>
 
       <span class="config-row">
         <label for="key-plus-0">+0:</label>
-        <input class="key-input" id="key-plus-0" type="text" maxlength="1" value="c" data-action="plus0">
+        <input class="key-input" id="key-plus-0" type="text" value="Space" data-key=" " data-action="plus0" readonly>
       </span>
 
       <div id="config-warning"></div>
     </div>
-
-    <div id="how-to">
-      <div id="how-to-title">Como usar localmente (desconsiderar se usado no browser)</div>
-      <ol>
-        <li>Deixe este arquivo HTML dentro de uma pasta fácil de achar, por exemplo, na Área de Trabalho.</li>
-        <li>Abra essa pasta, clique na barra de endereço do Explorador de Arquivos, digite <strong>cmd</strong> e aperte <strong>Enter</strong>. Isso abre o Prompt de Comando já nessa pasta.</li>
-        <li>No Prompt de Comando, digite <strong>py -m http.server 8000</strong> e aperte <strong>Enter</strong>. Deixe essa janela aberta enquanto estiver usando a página.</li>
-        <li>No navegador, acesse <strong>localhost:8000</strong>, clique em <strong>index.html</strong>, cole o link do YouTube e use as teclas configuradas. Para trocar uma tecla, altere a letra em <strong>Configurar teclas</strong>; cada campo aceita apenas uma letra e não pode repetir outra tecla.</li>
-      </ol>
-    </div>
   </div>
+
+  <div id="credit">Developed by Patrick Roncoski</div>
 
   <script>
     const loadButton = document.getElementById('load-video');
@@ -255,6 +236,7 @@
     let positiveScore = 0;
     let negativeScore = 0;
     let scoreChangeTimeout = null;
+    let flashTimeout = null;
 
     const originalBg = getComputedStyle(document.body).backgroundColor;
 
@@ -335,12 +317,12 @@
       const videoId = extractVideoID(url);
 
       if (!videoId) {
-        alert('Link do YouTube inválido ou vídeo indisponível.');
+        alert('Invalid YouTube link or unavailable video.');
         return;
       }
 
       if (location.protocol === 'file:') {
-        statusBox.textContent = 'Atenção: abra este arquivo por http://localhost, não por file://. No file:// o YouTube pode retornar Erro 153.';
+        statusBox.textContent = 'Warning: open this file through http://localhost or GitHub Pages, not through file://. YouTube may return Error 153 when opened through file://.';
       } else {
         statusBox.textContent = '';
       }
@@ -349,9 +331,11 @@
     });
 
     function flashScreen(color, duration) {
+      clearTimeout(flashTimeout);
+
       document.body.style.backgroundColor = color;
 
-      setTimeout(function() {
+      flashTimeout = setTimeout(function() {
         document.body.style.backgroundColor = originalBg;
       }, duration);
     }
@@ -374,20 +358,52 @@
       totalDisplay.textContent = 'Total: ' + (positiveScore - negativeScore);
     }
 
-    function sanitizeKeyInput(input) {
-      const cleanValue = input.value
-        .toLowerCase()
-        .replace(/[^a-z]/g, '')
-        .slice(0, 1);
+    function normalizeKey(key) {
+      if (key.length === 1) {
+        return key.toLowerCase();
+      }
 
-      input.value = cleanValue;
+      return key.toLowerCase();
+    }
+
+    function formatKeyName(key) {
+      const names = {
+        ' ': 'Space',
+        arrowup: 'Arrow ↑',
+        arrowdown: 'Arrow ↓',
+        arrowleft: 'Arrow ←',
+        arrowright: 'Arrow →',
+        escape: 'Esc',
+        control: 'Ctrl',
+        alt: 'Alt',
+        shift: 'Shift',
+        meta: 'Meta',
+        enter: 'Enter',
+        tab: 'Tab',
+        backspace: 'Backspace',
+        delete: 'Delete'
+      };
+
+      if (names[key]) {
+        return names[key];
+      }
+
+      if (key.length === 1) {
+        return key.toUpperCase();
+      }
+
+      return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    function updateKeyInputDisplay(input) {
+      input.value = formatKeyName(input.dataset.key || '');
     }
 
     function getCurrentKeyConfig() {
       const config = {};
 
       keyInputs.forEach(function(input) {
-        config[input.dataset.action] = input.value.toLowerCase();
+        config[input.dataset.action] = input.dataset.key || '';
       });
 
       return config;
@@ -400,12 +416,12 @@
 
       keyInputs.forEach(function(input) {
         input.style.outline = '';
-        const key = input.value.toLowerCase();
+        const key = input.dataset.key || '';
 
         if (!key) {
           hasError = true;
           input.style.outline = '2px solid #ffb3b3';
-          warning = 'Preencha todas as teclas com uma letra.';
+          warning = 'Set a key for every action.';
           return;
         }
 
@@ -413,7 +429,7 @@
           hasError = true;
           input.style.outline = '2px solid #ffb3b3';
           usedKeys[key].style.outline = '2px solid #ffb3b3';
-          warning = 'Não use a mesma letra em mais de uma ação.';
+          warning = 'Do not use the same key for more than one action.';
           return;
         }
 
@@ -424,13 +440,29 @@
       return !hasError;
     }
 
-    function refreshKeyConfig() {
-      keyInputs.forEach(sanitizeKeyInput);
-      validateKeyConfig();
-    }
-
     keyInputs.forEach(function(input) {
-      input.addEventListener('input', refreshKeyConfig);
+      updateKeyInputDisplay(input);
+
+      input.addEventListener('keydown', function(event) {
+        if (event.key === 'Tab') {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (event.key === 'Dead') {
+          return;
+        }
+
+        input.dataset.key = normalizeKey(event.key);
+        updateKeyInputDisplay(input);
+        validateKeyConfig();
+        input.blur();
+      });
+
+      input.addEventListener('paste', function(event) {
+        event.preventDefault();
+      });
 
       input.addEventListener('focus', function() {
         input.select();
@@ -448,7 +480,7 @@
         return;
       }
 
-      const key = event.key.toLowerCase();
+      const key = normalizeKey(event.key);
       const config = getCurrentKeyConfig();
 
       for (const action in config) {
@@ -478,7 +510,7 @@
       scoreChangeDisplay.classList.remove('show');
     });
 
-    refreshKeyConfig();
+    validateKeyConfig();
     updateScoreDisplays();
   </script>
 </body>
