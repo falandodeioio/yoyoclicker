@@ -485,6 +485,8 @@
 
       for (const action in config) {
         if (config[action] === key) {
+          event.preventDefault();
+
           const setting = actionSettings[action];
           const value = setting.value;
 
